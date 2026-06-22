@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<!-- saved from url=(0066)https://run-html-chat.deepseeksvc.com/usercontent/usercontent.html -->
+<html lang="zh-CN"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover, maximum-scale=1.0, minimum-scale=1.0">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="待办集">
+  <meta name="theme-color" content="#F9F6EF">
+  <title>待办集 · 计划 · 日记 · 反思 · 单词</title>
+  <style>body { margin: 0; }</style><style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+    :root {
+      --bg: #F9F6EF;
+      --bg-card: #FDFBF6;
+      --bg-input: #FFFFFF;
+      --text: #1C1C1E;
+      --text-secondary: #3A3A3C;
+      --text-light: #8E8E93;
+      --border: #E5DFD5;
+      --border-light: #EDE8DF;
+      --accent-green: #34C759;
+      --accent-red: #FF3B30;
+      --accent-blue: #007AFF;
+      --accent-blue-light: #E8F0FE;
+      --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md: 0 2px 8px rgba(0,0,0,0.06);
+      --radius-sm: 12px;
+      --radius: 16px;
+      --font-sans: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', 'PingFang SC', sans-serif;
+      --safe-bottom: env(safe-area-inset-bottom, 12px);
+    }
+    body {
+      font-family: var(--font-sans);
+      background: var(--bg);
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
+      height: 100vh;
+      height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      max-width: 500px;
+      margin: 0 auto;
+      box-shadow: var(--shadow-md);
+      overflow: hidden;
+      position: relative;
+      user-select: none;
+    }
+    .app-header {
+      flex-shrink: 0;
+      padding: 10px 16px 4px;
+      text-align: center;
+      background: var(--bg);
+      z-index: 10;
+    }
+    .app-header .app-title { font-size: 1.1rem; font-weight: 650; letter-spacing: 0.02em; }
+    .app-header .app-subtitle { font-size: 0.65rem; color: var(--text-light); letter-spacing: 0.05em; }
+
+    .date-navigator {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 6px 16px 8px;
+      background: var(--bg);
+      flex-shrink: 0;
+      flex-wrap: wrap;
+    }
+    .date-nav-btn {
+      width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--border);
+      background: var(--bg-card); font-size: 0.95rem; display: flex; align-items: center;
+      justify-content: center; cursor: pointer; color: var(--text-secondary); box-shadow: var(--shadow-sm);
+    }
+    .date-nav-btn:active { transform: scale(0.92); background: var(--border-light); }
+    .date-today-btn {
+      font-size: 0.68rem; font-weight: 600; padding: 7px 12px; border-radius: 20px;
+      background: var(--accent-blue-light); color: var(--accent-blue); border: none;
+      cursor: pointer; letter-spacing: 0.04em; font-family: var(--font-sans);
+    }
+    .date-today-btn:active { opacity: 0.7; transform: scale(0.96); }
+    .date-display { text-align: center; min-width: 115px; }
+    .date-display .weekday { font-size: 0.68rem; color: var(--text-light); letter-spacing: 0.06em; }
+    .date-display .full-date { font-size: 1rem; font-weight: 600; letter-spacing: 0.02em; }
+    .history-btn {
+      background: transparent; border: none; font-size: 1.3rem; cursor: pointer;
+      padding: 6px 8px; border-radius: 10px; color: var(--text-secondary);
+    }
+    .history-btn:active { background: rgba(0,0,0,0.03); }
+
+    .tab-row {
+      display: flex; gap: 4px; padding: 4px 12px 6px; background: var(--bg);
+      flex-shrink: 0; overflow-x: auto; scrollbar-width: none;
+    }
+    .tab-row::-webkit-scrollbar { display: none; }
+    .tab-pill {
+      flex: 0 0 auto; padding: 7px 14px; border-radius: 20px; font-size: 0.72rem;
+      font-weight: 500; letter-spacing: 0.03em; background: var(--bg-card);
+      border: 1px solid var(--border-light); color: var(--text-secondary); cursor: pointer;
+      white-space: nowrap; box-shadow: var(--shadow-sm);
+    }
+    .tab-pill.active {
+      background: var(--accent-blue); color: #fff; border-color: var(--accent-blue);
+      font-weight: 600; box-shadow: 0 2px 8px rgba(0,122,255,0.25);
+    }
+
+    .panels-container {
+      flex: 1; display: flex; overflow-x: auto; overflow-y: hidden;
+      scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; scroll-behavior: smooth;
+      scrollbar-width: none;
+    }
+    .panels-container::-webkit-scrollbar { display: none; }
+    .panel {
+      flex: 0 0 100%; width: 100%; scroll-snap-align: start; overflow-y: auto;
+      padding: 8px 16px 20px; -webkit-overflow-scrolling: touch;
+      overflow-x: hidden; /* 防止横向溢出 */
+    }
+    .card {
+      background: var(--bg-card); border-radius: var(--radius); padding: 16px;
+      margin-bottom: 14px; border: 1px solid var(--border-light); box-shadow: var(--shadow-sm);
+    }
+    .card-header {
+      display: flex; align-items: center; gap: 8px; margin-bottom: 12px;
+      font-weight: 600; font-size: 0.9rem;
+    }
+    .card-header span { font-size: 1.1rem; }
+    .save-indicator { font-size: 0.68rem; color: var(--accent-green); opacity: 0; margin-left: auto; font-weight: 500; }
+    .save-indicator.show { opacity: 1; }
+
+    /* 输入行统一优化，防止溢出 */
+    .plan-input-row, .reminder-input-row, .vocab-input-row {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 10px;
+      align-items: center;
+    }
+    .plan-input, .reminder-input, .vocab-input {
+      flex: 1;
+      min-width: 0; /* 允许缩小 */
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--bg-input);
+      font-size: 0.85rem;
+      -webkit-user-select: text;
+      user-select: text;
+      font-family: var(--font-sans);
+      box-sizing: border-box;
+      max-width: 100%;
+    }
+    .plan-input:focus, .reminder-input:focus, .vocab-input:focus { outline: none; border-color: var(--accent-blue); }
+    .plan-add-btn, .reminder-add-btn, .vocab-add-btn {
+      padding: 10px 14px;
+      background: var(--accent-blue);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 0.85rem;
+      white-space: nowrap;
+      font-family: var(--font-sans);
+      flex-shrink: 0;
+    }
+    .plan-add-btn:active, .reminder-add-btn:active, .vocab-add-btn:active { opacity: 0.8; }
+
+    .list-container { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+    .plan-item, .reminder-item, .vocab-item {
+      display: flex; align-items: center; gap: 6px; background: var(--bg-input);
+      border-radius: 10px; padding: 10px 12px; border: 1px solid var(--border-light);
+    }
+    .plan-text, .reminder-text { flex: 1; font-size: 0.85rem; word-break: break-word; }
+    .plan-item.status-check .plan-text { text-decoration: line-through; color: var(--text-light); }
+    .plan-item.status-cross .plan-text { color: var(--text-light); opacity: 0.7; }
+    .plan-item.status-bar .plan-text { font-style: italic; }
+    .reminder-item.completed .reminder-text { text-decoration: line-through; color: var(--text-light); }
+    .status-btns { display: flex; gap: 4px; }
+    .status-btn {
+      width: 30px; height: 30px; border-radius: 50%; border: 2px solid transparent;
+      background: transparent; font-weight: 700; font-size: 0.8rem; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .status-btn:active { transform: scale(0.85); }
+    .btn-cross { color: #FF3B30; border-color: #FFD9D6; background: #FFF0EF; }
+    .btn-cross.active-cross { background: #FF3B30; color: #fff; border-color: #FF3B30; }
+    .btn-check { color: #34C759; border-color: #D1F0D9; background: #EDF9F1; }
+    .btn-check.active-check { background: #34C759; color: #fff; border-color: #34C759; }
+    .btn-bar { color: #007AFF; border-color: #D0E3FF; background: #EDF4FF; }
+    .btn-bar.active-bar { background: #007AFF; color: #fff; border-color: #007AFF; }
+    .reminder-toggle-btn {
+      width: 28px; height: 28px; border-radius: 50%; border: 2px solid #D1F0D9;
+      background: #EDF9F1; color: #34C759; font-size: 0.9rem; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .reminder-toggle-btn.completed { background: #34C759; color: #fff; border-color: #34C759; }
+    .delete-btn { background: none; border: none; font-size: 0.9rem; opacity: 0.5; cursor: pointer; padding: 4px; }
+    .delete-btn:active { opacity: 1; color: var(--accent-red); }
+
+    .diary-textarea {
+      width: 100%; min-height: 140px; padding: 12px; border-radius: var(--radius-sm);
+      border: 1px solid var(--border); background: var(--bg-input); font-size: 0.9rem;
+      line-height: 1.6; resize: vertical; font-family: var(--font-sans); color: var(--text);
+      -webkit-user-select: text; user-select: text; box-sizing: border-box;
+    }
+    .diary-textarea:focus { outline: none; border-color: var(--accent-blue); }
+
+    .reflection-section { margin-bottom: 12px; }
+    .reflection-label { display: flex; align-items: center; gap: 6px; font-size: 0.78rem; font-weight: 600; margin-bottom: 6px; color: var(--text-secondary); }
+    .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+    .dot-highlights { background: #FFB340; } .dot-improvements { background: #6B8EC4; }
+    .reflection-textarea {
+      width: 100%; min-height: 70px; padding: 10px 12px; border-radius: var(--radius-sm);
+      border: 1px solid var(--border); background: var(--bg-input); font-size: 0.85rem;
+      line-height: 1.6; resize: vertical; font-family: var(--font-sans); color: var(--text);
+      -webkit-user-select: text; user-select: text; box-sizing: border-box;
+    }
+    .reflection-textarea:focus { outline: none; border-color: var(--accent-blue); }
+
+    .word-en, .word-zh {
+      flex: 1; font-size: 0.85rem; text-align: center; cursor: pointer;
+      min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .word-en { font-weight: 500; }
+    .word-zh { color: var(--text-secondary); }
+    .word-en.masked, .word-zh.masked { color: transparent; background: #E8E4DA; border-radius: 4px; user-select: none; }
+    .word-en.masked::after, .word-zh.masked::after { content: '👆'; font-size: 0.8rem; }
+    .word-en.reveal-temp, .word-zh.reveal-temp { color: var(--text) !important; background: transparent !important; }
+    .mask-row { display: flex; gap: 6px; margin-bottom: 10px; }
+    .mask-btn {
+      flex: 1; padding: 6px 4px; border-radius: 16px; border: 1px solid var(--border);
+      background: var(--bg-card); font-size: 0.65rem; font-weight: 500; cursor: pointer;
+      text-align: center; color: var(--text-secondary); white-space: nowrap;
+    }
+    .mask-btn.active { background: var(--accent-blue); color: #fff; border-color: var(--accent-blue); }
+
+    /* 历史浮层 */
+    .history-overlay {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.25); z-index: 200;
+      display: flex; justify-content: center; align-items: flex-end;
+      visibility: hidden; opacity: 0; transition: 0.25s;
+    }
+    .history-overlay.show { visibility: visible; opacity: 1; }
+    .history-panel {
+      background: var(--bg-card); width: 100%; max-width: 500px;
+      max-height: 75vh; border-radius: 20px 20px 0 0;
+      padding: 16px 16px 24px; overflow-y: auto;
+      box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+    }
+    .history-panel h3 { display: flex; justify-content: space-between; align-items: center; font-size: 1rem; margin-bottom: 12px; }
+    .history-close { background: none; border: none; font-size: 1.2rem; cursor: pointer; }
+    .history-search {
+      width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--border);
+      background: var(--bg-input); font-size: 0.85rem; margin-bottom: 10px; font-family: var(--font-sans);
+      box-sizing: border-box;
+    }
+    .history-search:focus { outline: none; border-color: var(--accent-blue); }
+    .view-switch { display: flex; gap: 8px; margin-bottom: 12px; }
+    .view-switch-btn {
+      flex: 1; padding: 8px; border-radius: 20px; border: 1px solid var(--border);
+      background: var(--bg-card); font-size: 0.75rem; font-weight: 500; cursor: pointer;
+      text-align: center; color: var(--text-secondary);
+    }
+    .view-switch-btn.active { background: var(--accent-blue); color: #fff; border-color: var(--accent-blue); }
+    .history-list-container { display: block; }
+    .history-list-container.hidden { display: none; }
+    .calendar-container { display: none; }
+    .calendar-container.visible { display: block; }
+    .calendar-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+    .calendar-month-label { font-weight: 600; font-size: 0.9rem; }
+    .calendar-nav-btn {
+      width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--border);
+      background: var(--bg-card); cursor: pointer; font-size: 0.9rem; display: flex;
+      align-items: center; justify-content: center;
+    }
+    .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; }
+    .calendar-day-header { font-size: 0.65rem; color: var(--text-light); font-weight: 500; padding: 4px 0; }
+    .calendar-day {
+      aspect-ratio: 1 / 1; display: flex; align-items: center; justify-content: center;
+      border-radius: 50%; font-size: 0.75rem; cursor: pointer; position: relative;
+    }
+    .calendar-day.today { font-weight: 700; color: var(--accent-blue); }
+    .calendar-day.selected { background: var(--accent-blue); color: #fff; font-weight: 600; }
+    .calendar-day.has-records::after {
+      content: ''; position: absolute; bottom: 2px; width: 4px; height: 4px;
+      border-radius: 50%; background: var(--accent-green);
+    }
+    .calendar-day.selected.has-records::after { background: #fff; }
+    .history-date-item {
+      padding: 12px; border-radius: 12px; background: var(--bg-input); margin-bottom: 8px;
+      border: 1px solid var(--border-light); cursor: pointer; display: flex;
+      justify-content: space-between; align-items: center;
+    }
+    .history-date-item:active { background: var(--border-light); }
+    .history-date-item .date-label { font-weight: 600; font-size: 0.85rem; }
+    .history-date-item .badges { display: flex; gap: 4px; font-size: 0.75rem; color: var(--text-light); }
+    .toast {
+      position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-120px);
+      background: #1C1C1E; color: #fff; padding: 8px 20px; border-radius: 20px;
+      font-size: 0.8rem; z-index: 300; transition: 0.3s; pointer-events: none;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+    .empty-message { text-align: center; color: var(--text-light); font-size: 0.8rem; padding: 8px; }
+  </style>
+<link rel="manifest" href="blob:https://run-html-chat.deepseeksvc.com/8e7fc200-b3b2-4ad3-ae21-86787d31ebb5"></head>
+<body>
+  <header class="app-header">
+    <div class="app-title">待办集</div>
+    <div class="app-subtitle">PLAN · DIARY · REFLECT · WORDS</div>
+  </header>
+
+  <div class="date-navigator">
+    <button class="date-nav-btn" id="prevDayBtn">◀</button>
+    <div class="date-display">
+      <div class="weekday" id="weekdayDisplay">Monday</div>
+      <div class="full-date" id="fullDateDisplay">June 22, 2026</div>
+    </div>
+    <button class="date-nav-btn" id="nextDayBtn">▶</button>
+    <button class="date-today-btn" id="todayBtn">Today</button>
+    <button class="history-btn" id="historyBtn">📅</button>
+  </div>
+
+  <div class="tab-row" id="tabRow">
+    <button class="tab-pill active" data-panel="plan">📋 计划</button>
+    <button class="tab-pill" data-panel="diary">📝 日记</button>
+    <button class="tab-pill" data-panel="reflect">🌟 反思</button>
+    <button class="tab-pill" data-panel="words">📚 单词</button>
+  </div>
+
+  <div class="panels-container" id="panelsContainer">
+    <!-- 计划面板 -->
+    <div class="panel" id="panel-plan">
+      <div class="card">
+        <div class="card-header"><span>📋</span> 计划 <span class="save-indicator" id="planSaved">✓ 已保存</span></div>
+        <div class="plan-input-row">
+          <input class="plan-input" id="planInput" placeholder="新计划..." autocomplete="off">
+          <button class="plan-add-btn" id="planAddBtn">+ Add</button>
+        </div>
+        <ul class="list-container" id="planList"><div class="empty-message">暂无计划</div></ul>
+      </div>
+      <div class="card">
+        <div class="card-header"><span>⏰</span> 提醒事项 <span class="save-indicator" id="reminderSaved">✓ 已保存</span></div>
+        <div class="reminder-input-row">
+          <input class="reminder-input" id="reminderInput" placeholder="待办提醒..." autocomplete="off">
+          <button class="reminder-add-btn" id="reminderAddBtn">+ Add</button>
+        </div>
+        <ul class="list-container" id="reminderList"><div class="empty-message">暂无提醒</div></ul>
+      </div>
+    </div>
+
+    <!-- 日记面板 -->
+    <div class="panel" id="panel-diary">
+      <div class="card">
+        <div class="card-header"><span>📝</span> 日记 <span class="save-indicator" id="diarySaved">✓ 已保存</span></div>
+        <textarea class="diary-textarea" id="diaryTextarea" placeholder="记录今天的想法..."></textarea>
+      </div>
+    </div>
+
+    <!-- 反思面板 -->
+    <div class="panel" id="panel-reflect">
+      <div class="card">
+        <div class="card-header"><span>🌟</span> 亮点与改进 <span class="save-indicator" id="reflectionSaved">✓ 已保存</span></div>
+        <div class="reflection-section">
+          <label class="reflection-label"><span class="dot dot-highlights"></span> ✨ 亮点</label>
+          <textarea class="reflection-textarea" id="highlightsTextarea" placeholder="今天做得好的地方、小成就..."></textarea>
+        </div>
+        <div class="reflection-section">
+          <label class="reflection-label"><span class="dot dot-improvements"></span> 🔧 待改进</label>
+          <textarea class="reflection-textarea" id="improvementsTextarea" placeholder="可以改进的地方、教训..."></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- 单词面板 -->
+    <div class="panel" id="panel-words">
+      <div class="card">
+        <div class="card-header"><span>📚</span> 单词 <span class="save-indicator" id="vocabSaved">✓ 已保存</span></div>
+        <div class="vocab-input-row">
+          <input class="vocab-input" id="vocabEnInput" placeholder="English" autocomplete="off">
+          <input class="vocab-input" id="vocabZhInput" placeholder="中文" autocomplete="off">
+          <button class="vocab-add-btn" id="vocabAddBtn">+ Add</button>
+        </div>
+        <div class="mask-row">
+          <button class="mask-btn active" data-mask="none">📋 全部</button>
+          <button class="mask-btn" data-mask="zh">🙈 隐藏中文</button>
+          <button class="mask-btn" data-mask="en">🙉 隐藏英文</button>
+        </div>
+        <ul class="list-container" id="vocabList"><div class="empty-message">暂无单词</div></ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- 历史浮层（含搜索和日历） -->
+  <div class="history-overlay" id="historyOverlay">
+    <div class="history-panel">
+      <h3>📆 查找记录 <button class="history-close" id="historyClose">✕</button></h3>
+      <input class="history-search" id="historySearchInput" placeholder="🔍 搜索年份、月份、星期...">
+      <div class="view-switch">
+        <button class="view-switch-btn active" data-view="list">📋 列表</button>
+        <button class="view-switch-btn" data-view="calendar">📅 日历</button>
+      </div>
+      <div class="history-list-container" id="historyListContainer">
+        <div id="historyDateList"></div>
+      </div>
+      <div class="calendar-container" id="calendarContainer">
+        <div class="calendar-header">
+          <button class="calendar-nav-btn" id="calPrevMonth">◀</button>
+          <span class="calendar-month-label" id="calMonthLabel"></span>
+          <button class="calendar-nav-btn" id="calNextMonth">▶</button>
+        </div>
+        <div class="calendar-grid" id="calendarGrid"></div>
+      </div>
+    </div>
+  </div>
+  <div class="toast" id="toast"></div>
+
+  <script>
+    (() => {
+      // DOM 元素
+      const els = {
+        weekday: document.getElementById('weekdayDisplay'),
+        fullDate: document.getElementById('fullDateDisplay'),
+        prevBtn: document.getElementById('prevDayBtn'),
+        nextBtn: document.getElementById('nextDayBtn'),
+        todayBtn: document.getElementById('todayBtn'),
+        historyBtn: document.getElementById('historyBtn'),
+        historyOverlay: document.getElementById('historyOverlay'),
+        historyList: document.getElementById('historyDateList'),
+        historyClose: document.getElementById('historyClose'),
+        historySearch: document.getElementById('historySearchInput'),
+        toast: document.getElementById('toast'),
+        panelsContainer: document.getElementById('panelsContainer'),
+        tabPills: document.querySelectorAll('.tab-pill'),
+        planInput: document.getElementById('planInput'),
+        planAddBtn: document.getElementById('planAddBtn'),
+        planList: document.getElementById('planList'),
+        planSaved: document.getElementById('planSaved'),
+        reminderInput: document.getElementById('reminderInput'),
+        reminderAddBtn: document.getElementById('reminderAddBtn'),
+        reminderList: document.getElementById('reminderList'),
+        reminderSaved: document.getElementById('reminderSaved'),
+        diaryTextarea: document.getElementById('diaryTextarea'),
+        diarySaved: document.getElementById('diarySaved'),
+        highlightsTextarea: document.getElementById('highlightsTextarea'),
+        improvementsTextarea: document.getElementById('improvementsTextarea'),
+        reflectionSaved: document.getElementById('reflectionSaved'),
+        vocabEnInput: document.getElementById('vocabEnInput'),
+        vocabZhInput: document.getElementById('vocabZhInput'),
+        vocabAddBtn: document.getElementById('vocabAddBtn'),
+        vocabList: document.getElementById('vocabList'),
+        vocabSaved: document.getElementById('vocabSaved'),
+        maskBtns: document.querySelectorAll('.mask-btn'),
+        historyListContainer: document.getElementById('historyListContainer'),
+        calendarContainer: document.getElementById('calendarContainer'),
+        calPrevMonth: document.getElementById('calPrevMonth'),
+        calNextMonth: document.getElementById('calNextMonth'),
+        calMonthLabel: document.getElementById('calMonthLabel'),
+        calendarGrid: document.getElementById('calendarGrid'),
+        viewSwitchBtns: document.querySelectorAll('.view-switch-btn'),
+      };
+
+      let selectedDate = new Date();
+      let currentMask = 'none';
+      let toastTimer = null;
+      let allHistoryKeys = [];
+      let calendarYear, calendarMonth;
+
+      const formatKey = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+      const parseKey = k => { const [y,m,d] = k.split('-').map(Number); return new Date(y,m-1,d); };
+      const weekdays = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+      const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+      const getEngDate = d => ({
+        weekday: weekdays[d.getDay()],
+        fullDate: `${months[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`,
+        month: months[d.getMonth()],
+        year: d.getFullYear().toString(),
+        day: d.getDate().toString()
+      });
+      const updateDateDisplay = () => {
+        const e = getEngDate(selectedDate);
+        els.weekday.textContent = e.weekday;
+        els.fullDate.textContent = e.fullDate;
+      };
+
+      const storage = {
+        get(key) { try { return JSON.parse(localStorage.getItem(key)||'{}'); } catch { return {}; } },
+        set(key, v) { localStorage.setItem(key, JSON.stringify(v)); }
+      };
+      const showToast = msg => {
+        if(toastTimer) clearTimeout(toastTimer);
+        els.toast.textContent = msg;
+        els.toast.classList.add('show');
+        toastTimer = setTimeout(() => els.toast.classList.remove('show'), 1800);
+      };
+      const esc = s => { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; };
+
+      const DIARY = 'diary_v3', VOCAB = 'vocab_v3', PLANS = 'plans_v3', REFLECT = 'reflect_v3', REMINDERS = 'reminders_v3';
+
+      function loadAll() {
+        updateDateDisplay();
+        const key = formatKey(selectedDate);
+        const plans = storage.get(PLANS)[key] || [];
+        renderPlans(plans);
+        const reminders = storage.get(REMINDERS)[key] || [];
+        renderReminders(reminders);
+        els.diaryTextarea.value = storage.get(DIARY)[key] || '';
+        const ref = storage.get(REFLECT)[key] || { highlights:'', improvements:'' };
+        els.highlightsTextarea.value = ref.highlights || '';
+        els.improvementsTextarea.value = ref.improvements || '';
+        const words = storage.get(VOCAB)[key] || [];
+        renderVocab(words);
+        [els.planSaved, els.reminderSaved, els.diarySaved, els.reflectionSaved, els.vocabSaved].forEach(el => el.classList.remove('show'));
+      }
+
+      function renderPlans(plans) {
+        if(!plans.length) { els.planList.innerHTML = '<div class="empty-message">暂无计划</div>'; return; }
+        els.planList.innerHTML = plans.map((p,i) => {
+          const cls = p.status === 'check' ? 'status-check' : p.status === 'cross' ? 'status-cross' : p.status === 'bar' ? 'status-bar' : '';
+          return `<li class="plan-item ${cls}">
+            <span class="plan-text">${esc(p.content)}</span>
+            <div class="status-btns">
+              <button class="status-btn btn-cross ${p.status==='cross'?'active-cross':''}" data-idx="${i}" data-action="cross">✕</button>
+              <button class="status-btn btn-bar ${p.status==='bar'?'active-bar':''}" data-idx="${i}" data-action="bar">━</button>
+              <button class="status-btn btn-check ${p.status==='check'?'active-check':''}" data-idx="${i}" data-action="check">✓</button>
+            </div>
+            <button class="delete-btn" data-idx="${i}" data-type="plan">🗑</button>
+          </li>`;
+        }).join('');
+        attachPlanEvents();
+      }
+      function attachPlanEvents() {
+        els.planList.querySelectorAll('.status-btn').forEach(b => b.addEventListener('click', e => {
+          const idx = +b.dataset.idx, action = b.dataset.action;
+          const key = formatKey(selectedDate);
+          const data = storage.get(PLANS);
+          if(data[key] && data[key][idx]) {
+            data[key][idx].status = data[key][idx].status === action ? 'none' : action;
+            storage.set(PLANS, data);
+            loadAll();
+          }
+        }));
+        els.planList.querySelectorAll('.delete-btn').forEach(b => b.addEventListener('click', () => {
+          const idx = +b.dataset.idx;
+          const key = formatKey(selectedDate);
+          const data = storage.get(PLANS);
+          if(data[key]) { data[key].splice(idx,1); if(!data[key].length) delete data[key]; storage.set(PLANS, data); loadAll(); }
+        }));
+      }
+      function renderReminders(reminders) {
+        if(!reminders.length) { els.reminderList.innerHTML = '<div class="empty-message">暂无提醒</div>'; return; }
+        els.reminderList.innerHTML = reminders.map((r,i) => `
+          <li class="reminder-item ${r.completed?'completed':''}">
+            <button class="reminder-toggle-btn ${r.completed?'completed':''}" data-idx="${i}">✓</button>
+            <span class="reminder-text">${esc(r.content)}</span>
+            <button class="delete-btn" data-idx="${i}" data-type="reminder">🗑</button>
+          </li>`).join('');
+        els.reminderList.querySelectorAll('.reminder-toggle-btn').forEach(b => b.addEventListener('click', () => {
+          const idx = +b.dataset.idx;
+          const key = formatKey(selectedDate);
+          const data = storage.get(REMINDERS);
+          if(data[key] && data[key][idx]) { data[key][idx].completed = !data[key][idx].completed; storage.set(REMINDERS, data); loadAll(); }
+        }));
+        els.reminderList.querySelectorAll('.delete-btn').forEach(b => b.addEventListener('click', () => {
+          const idx = +b.dataset.idx;
+          const key = formatKey(selectedDate);
+          const data = storage.get(REMINDERS);
+          if(data[key]) { data[key].splice(idx,1); if(!data[key].length) delete data[key]; storage.set(REMINDERS, data); loadAll(); }
+        }));
+      }
+      function renderVocab(words) {
+        if(!words.length) { els.vocabList.innerHTML = '<div class="empty-message">暂无单词</div>'; return; }
+        els.vocabList.innerHTML = words.map((w,i) => `
+          <li class="plan-item vocab-item">
+            <span class="word-en ${currentMask==='en'?'masked':''}" data-type="en">${esc(w.english)}</span>
+            <span class="word-zh ${currentMask==='zh'?'masked':''}" data-type="zh">${esc(w.chinese)}</span>
+            <button class="delete-btn" data-idx="${i}" data-type="vocab">🗑</button>
+          </li>`).join('');
+        document.querySelectorAll('.word-en.masked, .word-zh.masked').forEach(el => {
+          const show = () => el.classList.add('reveal-temp');
+          const hide = () => el.classList.remove('reveal-temp');
+          el.addEventListener('pointerdown', show); el.addEventListener('pointerup', hide); el.addEventListener('pointerleave', hide);
+          el.addEventListener('touchstart', e => { e.preventDefault(); show(); }, {passive: false});
+          el.addEventListener('touchend', hide); el.addEventListener('touchcancel', hide);
+        });
+        els.vocabList.querySelectorAll('.delete-btn').forEach(b => b.addEventListener('click', () => {
+          const idx = +b.dataset.idx;
+          const key = formatKey(selectedDate);
+          const data = storage.get(VOCAB);
+          if(data[key]) { data[key].splice(idx,1); if(!data[key].length) delete data[key]; storage.set(VOCAB, data); loadAll(); }
+        }));
+      }
+
+      function addPlan() {
+        const val = els.planInput.value.trim();
+        if(!val) { showToast('请输入计划'); return; }
+        const key = formatKey(selectedDate);
+        const data = storage.get(PLANS);
+        if(!data[key]) data[key] = [];
+        data[key].push({ content: val, status: 'none' });
+        storage.set(PLANS, data);
+        els.planInput.value = '';
+        loadAll();
+        els.planSaved.classList.add('show'); setTimeout(() => els.planSaved.classList.remove('show'), 1500);
+      }
+      function addReminder() {
+        const val = els.reminderInput.value.trim();
+        if(!val) { showToast('请输入提醒内容'); return; }
+        const key = formatKey(selectedDate);
+        const data = storage.get(REMINDERS);
+        if(!data[key]) data[key] = [];
+        data[key].push({ content: val, completed: false });
+        storage.set(REMINDERS, data);
+        els.reminderInput.value = '';
+        loadAll();
+        els.reminderSaved.classList.add('show'); setTimeout(() => els.reminderSaved.classList.remove('show'), 1500);
+      }
+      function addVocab() {
+        const en = els.vocabEnInput.value.trim(), zh = els.vocabZhInput.value.trim();
+        if(!en||!zh) { showToast('请填写英文和中文'); return; }
+        const key = formatKey(selectedDate);
+        const data = storage.get(VOCAB);
+        if(!data[key]) data[key] = [];
+        data[key].push({ english: en, chinese: zh });
+        storage.set(VOCAB, data);
+        els.vocabEnInput.value = ''; els.vocabZhInput.value = '';
+        loadAll();
+        els.vocabSaved.classList.add('show'); setTimeout(() => els.vocabSaved.classList.remove('show'), 1500);
+      }
+
+      let diaryTimer, reflectTimer;
+      els.diaryTextarea.addEventListener('input', () => {
+        clearTimeout(diaryTimer);
+        diaryTimer = setTimeout(() => {
+          const key = formatKey(selectedDate);
+          const data = storage.get(DIARY);
+          if(els.diaryTextarea.value.trim()) data[key] = els.diaryTextarea.value; else delete data[key];
+          storage.set(DIARY, data);
+          els.diarySaved.classList.add('show'); setTimeout(() => els.diarySaved.classList.remove('show'), 1500);
+        }, 1000);
+      });
+      const autoSaveReflect = () => {
+        clearTimeout(reflectTimer);
+        reflectTimer = setTimeout(() => {
+          const key = formatKey(selectedDate);
+          const data = storage.get(REFLECT);
+          const h = els.highlightsTextarea.value, i = els.improvementsTextarea.value;
+          if(h.trim()||i.trim()) data[key] = { highlights: h, improvements: i }; else delete data[key];
+          storage.set(REFLECT, data);
+          els.reflectionSaved.classList.add('show'); setTimeout(() => els.reflectionSaved.classList.remove('show'), 1500);
+        }, 1000);
+      };
+      els.highlightsTextarea.addEventListener('input', autoSaveReflect);
+      els.improvementsTextarea.addEventListener('input', autoSaveReflect);
+
+      const panelMap = { plan: 0, diary: 1, reflect: 2, words: 3 };
+      function switchTab(panelName) {
+        const index = panelMap[panelName];
+        els.panelsContainer.scrollTo({ left: index * els.panelsContainer.clientWidth, behavior: 'smooth' });
+        els.tabPills.forEach(p => p.classList.toggle('active', p.dataset.panel === panelName));
+      }
+      els.tabPills.forEach(pill => pill.addEventListener('click', () => switchTab(pill.dataset.panel)));
+      els.panelsContainer.addEventListener('scroll', () => {
+        const idx = Math.round(els.panelsContainer.scrollLeft / els.panelsContainer.clientWidth);
+        const names = Object.keys(panelMap);
+        if(names[idx]) els.tabPills.forEach(p => p.classList.toggle('active', p.dataset.panel === names[idx]));
+      });
+
+      function changeDate(delta) {
+        const d = new Date(selectedDate);
+        d.setDate(d.getDate() + delta);
+        selectedDate = d;
+        loadAll();
+        els.panelsContainer.scrollTop = 0;
+      }
+      els.prevBtn.addEventListener('click', ()=>changeDate(-1));
+      els.nextBtn.addEventListener('click', ()=>changeDate(1));
+      els.todayBtn.addEventListener('click', ()=>{ selectedDate = new Date(); loadAll(); });
+
+      function collectAllKeys() {
+        const sets = [storage.get(DIARY), storage.get(VOCAB), storage.get(PLANS), storage.get(REFLECT), storage.get(REMINDERS)];
+        return [...new Set(sets.flatMap(Object.keys))].sort().reverse();
+      }
+      function renderHistoryList(keys) {
+        if(!keys.length) { els.historyList.innerHTML = '<div class="empty-message">无匹配记录</div>'; return; }
+        const dData = storage.get(DIARY), vData = storage.get(VOCAB), pData = storage.get(PLANS), rData = storage.get(REFLECT), remData = storage.get(REMINDERS);
+        els.historyList.innerHTML = keys.map(key => {
+          const eng = getEngDate(parseKey(key));
+          const badges = [pData[key]?.length ? '📋' : '', remData[key]?.length ? '⏰' : '', dData[key] ? '📝' : '', rData[key] ? '🌟' : '', vData[key]?.length ? '📚' : ''].filter(Boolean).join(' ');
+          return `<div class="history-date-item" data-key="${key}"><span class="date-label">${eng.weekday}, ${eng.fullDate}</span><span class="badges">${badges}</span></div>`;
+        }).join('');
+        els.historyList.querySelectorAll('.history-date-item').forEach(item => item.addEventListener('click', () => {
+          selectedDate = parseKey(item.dataset.key); loadAll(); els.historyOverlay.classList.remove('show');
+        }));
+      }
+
+      function renderCalendar() {
+        const year = calendarYear, month = calendarMonth;
+        els.calMonthLabel.textContent = `${months[month]} ${year}`;
+        const firstDay = new Date(year, month, 1).getDay();
+        const daysInMonth = new Date(year, month+1, 0).getDate();
+        const today = new Date();
+        const todayKey = formatKey(today);
+        const selectedKey = formatKey(selectedDate);
+        const recordsSet = new Set(allHistoryKeys);
+        let html = '';
+        ['S','M','T','W','T','F','S'].forEach(d => html += `<div class="calendar-day-header">${d}</div>`);
+        for (let i=0; i<firstDay; i++) html += '<div></div>';
+        for (let d=1; d<=daysInMonth; d++) {
+          const date = new Date(year, month, d);
+          const key = formatKey(date);
+          const classes = ['calendar-day'];
+          if (key === todayKey) classes.push('today');
+          if (key === selectedKey) classes.push('selected');
+          if (recordsSet.has(key)) classes.push('has-records');
+          html += `<div class="${classes.join(' ')}" data-date-key="${key}">${d}</div>`;
+        }
+        els.calendarGrid.innerHTML = html;
+        els.calendarGrid.querySelectorAll('.calendar-day').forEach(day => {
+          day.addEventListener('click', () => {
+            selectedDate = parseKey(day.dataset.dateKey);
+            loadAll();
+            els.historyOverlay.classList.remove('show');
+          });
+        });
+      }
+
+      function openHistory() {
+        allHistoryKeys = collectAllKeys();
+        els.historySearch.value = '';
+        els.viewSwitchBtns.forEach(b => b.classList.toggle('active', b.dataset.view === 'list'));
+        els.historyListContainer.classList.remove('hidden');
+        els.calendarContainer.classList.remove('visible');
+        renderHistoryList(allHistoryKeys);
+        calendarYear = selectedDate.getFullYear();
+        calendarMonth = selectedDate.getMonth();
+        renderCalendar();
+        els.historyOverlay.classList.add('show');
+        setTimeout(() => els.historySearch.focus(), 100);
+      }
+      function closeHistory() { els.historyOverlay.classList.remove('show'); }
+
+      els.historyBtn.addEventListener('click', openHistory);
+      els.historyClose.addEventListener('click', closeHistory);
+      els.historyOverlay.addEventListener('click', e => { if(e.target===els.historyOverlay) closeHistory(); });
+
+      els.historySearch.addEventListener('input', () => {
+        const term = els.historySearch.value.trim().toLowerCase();
+        const filtered = term ? allHistoryKeys.filter(key => {
+          const e = getEngDate(parseKey(key));
+          return `${e.weekday} ${e.month} ${e.fullDate} ${e.year} ${e.day}`.toLowerCase().includes(term);
+        }) : allHistoryKeys;
+        renderHistoryList(filtered);
+      });
+
+      els.viewSwitchBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          els.viewSwitchBtns.forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          if (btn.dataset.view === 'list') {
+            els.historyListContainer.classList.remove('hidden');
+            els.calendarContainer.classList.remove('visible');
+          } else {
+            els.historyListContainer.classList.add('hidden');
+            els.calendarContainer.classList.add('visible');
+            renderCalendar();
+          }
+        });
+      });
+
+      els.calPrevMonth.addEventListener('click', () => {
+        if (calendarMonth === 0) { calendarMonth = 11; calendarYear--; }
+        else calendarMonth--;
+        renderCalendar();
+      });
+      els.calNextMonth.addEventListener('click', () => {
+        if (calendarMonth === 11) { calendarMonth = 0; calendarYear++; }
+        else calendarMonth++;
+        renderCalendar();
+      });
+
+      els.maskBtns.forEach(b => b.addEventListener('click', () => {
+        els.maskBtns.forEach(b2 => b2.classList.remove('active'));
+        b.classList.add('active'); currentMask = b.dataset.mask; loadAll();
+      }));
+
+      els.planAddBtn.addEventListener('click', addPlan);
+      els.planInput.addEventListener('keydown', e => { if(e.key==='Enter') addPlan(); });
+      els.reminderAddBtn.addEventListener('click', addReminder);
+      els.reminderInput.addEventListener('keydown', e => { if(e.key==='Enter') addReminder(); });
+      els.vocabAddBtn.addEventListener('click', addVocab);
+      els.vocabZhInput.addEventListener('keydown', e => { if(e.key==='Enter') addVocab(); });
+
+      // 仅当在安全上下文（https）下才尝试注册 Service Worker，避免 file 协议报错
+      if (location.protocol === 'https:' || location.protocol === 'http:') {
+        if ('serviceWorker' in navigator) {
+          const swCode = `self.addEventListener('install', e => self.skipWaiting());
+            self.addEventListener('activate', e => self.clients.claim());
+            self.addEventListener('fetch', e => e.respondWith(fetch(e.request).catch(() => new Response('Offline'))));`;
+          const blob = new Blob([swCode], {type: 'application/javascript'});
+          navigator.serviceWorker.register(URL.createObjectURL(blob), {scope: '/'}).catch(() => {});
+        }
+      }
+
+      // 内嵌 manifest（仅对https有效，file下忽略）
+      if (location.protocol === 'https:') {
+        const m = { name:'待办集', short_name:'待办集', start_url:location.href.split('?')[0], display:'standalone', background_color:'#F9F6EF', theme_color:'#F9F6EF', icons:[{src:'data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192"><rect width="192" height="192" rx="36" fill="#F9F6EF"/><rect x="46" y="32" width="100" height="128" rx="10" fill="none" stroke="#007AFF" stroke-width="6"/><line x1="62" y1="72" x2="130" y2="72" stroke="#007AFF" stroke-width="5"/><line x1="62" y1="96" x2="130" y2="96" stroke="#007AFF" stroke-width="5"/><line x1="62" y1="120" x2="110" y2="120" stroke="#007AFF" stroke-width="5"/><circle cx="138" cy="140" r="24" fill="#34C759"/><polyline points="126,140 135,149 150,132" fill="none" stroke="white" stroke-width="5.5"/></svg>'),sizes:'192x192',type:'image/svg+xml'}]};
+        const blob = new Blob([JSON.stringify(m)], {type: 'application/json'});
+        const link = document.createElement('link');
+        link.rel = 'manifest';
+        link.href = URL.createObjectURL(blob);
+        document.head.appendChild(link);
+      }
+
+      loadAll();
+      document.addEventListener('keydown', e => {
+        if((e.ctrlKey||e.metaKey) && e.key==='ArrowLeft') { e.preventDefault(); changeDate(-1); }
+        if((e.ctrlKey||e.metaKey) && e.key==='ArrowRight') { e.preventDefault(); changeDate(1); }
+      });
+    })();
+  </script>
+
+</body></html>
